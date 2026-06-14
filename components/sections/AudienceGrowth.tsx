@@ -13,6 +13,7 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
+  LabelList,
 } from "recharts";
 
 const PLATFORMS = ["instagram", "youtube", "facebook"] as const;
@@ -44,7 +45,7 @@ export function AudienceGrowth() {
 
       <div className="h-52 mt-3">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={filtered.audienceGrowth} margin={{ top: 5, right: 16, left: 0, bottom: 5 }}>
+          <LineChart data={filtered.audienceGrowth} margin={{ top: 5, right: 64, left: 0, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
             <XAxis
               dataKey="month"
@@ -88,7 +89,32 @@ export function AudienceGrowth() {
                 strokeWidth={2}
                 dot={false}
                 activeDot={{ r: 4, strokeWidth: 0 }}
-              />
+              >
+                <LabelList
+                  dataKey={platform}
+                  position="right"
+                  formatter={(v: unknown) => {
+                    // Only show label on the last data point
+                    return typeof v === "number" ? v.toLocaleString("en-IN") : "";
+                  }}
+                  content={(props) => {
+                    const { x, y, value, index } = props as { x: number; y: number; value: number; index: number };
+                    // Only render on last point (index 11 = March)
+                    if (index !== 11) return null;
+                    return (
+                      <text
+                        x={(x ?? 0) + 6}
+                        y={(y ?? 0) + 4}
+                        fontSize={10}
+                        fontWeight={600}
+                        fill={platformColor(platform)}
+                      >
+                        {typeof value === "number" ? value.toLocaleString("en-IN") : ""}
+                      </text>
+                    );
+                  }}
+                />
+              </Line>
             ))}
           </LineChart>
         </ResponsiveContainer>

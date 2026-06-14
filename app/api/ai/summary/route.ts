@@ -9,9 +9,9 @@ export async function POST(req: NextRequest) {
   const platformsText = filters.activePlatforms.join(", ");
   const dateText = filters.dateRange.label;
 
-  const prompt = `You are a social media strategist analyzing performance data for "Rare Fitness" — a fitness brand.
+  const prompt = `You are a social media strategist analyzing performance for "Rare Fitness" fitness brand.
 
-Period: ${dateText} | Active platforms: ${platformsText}
+Period: ${dateText} | Platforms: ${platformsText}
 
 KPIs:
 - Total Followers: ${kpi.totalFollowers.toLocaleString()} (${kpi.mom.totalFollowers > 0 ? "+" : ""}${kpi.mom.totalFollowers}% MoM)
@@ -20,21 +20,30 @@ KPIs:
 - Avg Engagement Rate: ${kpi.avgEngagementRate}% (${kpi.mom.avgEngagementRate > 0 ? "+" : ""}${kpi.mom.avgEngagementRate}% MoM)
 - Content Published: ${kpi.contentPublished} posts
 
-Platform breakdown: ${JSON.stringify(
+Platforms: ${JSON.stringify(
     platforms.map((p: { platform: string; followers: number; reach: number; engagementRate: number }) => ({
       platform: p.platform,
       followers: p.followers,
       reach: p.reach,
-      engagementRate: p.engagementRate,
+      engRate: p.engagementRate,
     }))
   )}
 
-Respond in exactly 3 short paragraphs separated by newlines:
-1. What's working well (be specific with numbers)
-2. What's underperforming or needs attention (be specific)
-3. One concrete next action they should take this week
+Respond using EXACTLY this format — do not deviate, no markdown, no extra text:
 
-Keep each paragraph to 2 sentences max. Plain text only, no markdown.`;
+WORKING:
+• [specific finding with exact number]
+• [specific finding with exact number]
+• [specific finding with exact number]
+
+UNDERPERFORMING:
+• [specific finding with exact number]
+• [specific finding with exact number]
+
+ACTION:
+• [step 1 — concrete and specific]
+• [step 2 — concrete and specific]
+• [step 3 — concrete and specific]`;
 
   const encoder = new TextEncoder();
 
@@ -43,7 +52,8 @@ Keep each paragraph to 2 sentences max. Plain text only, no markdown.`;
       try {
         const stream = await groq.chat.completions.create({
           model: "llama-3.3-70b-versatile",
-          max_tokens: 300,
+          max_tokens: 350,
+          temperature: 0.4,
           messages: [{ role: "user", content: prompt }],
           stream: true,
         });
@@ -58,8 +68,7 @@ Keep each paragraph to 2 sentences max. Plain text only, no markdown.`;
         }
         controller.enqueue(encoder.encode("data: [DONE]\n\n"));
       } catch (err: unknown) {
-        const msg =
-          err instanceof Error ? err.message : "AI request failed";
+        const msg = err instanceof Error ? err.message : "AI request failed";
         controller.enqueue(
           encoder.encode(`data: ${JSON.stringify({ error: msg })}\n\n`)
         );

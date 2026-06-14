@@ -10,6 +10,7 @@ import { ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 
 type SortKey = keyof Pick<ContentPost, "likes" | "comments" | "shares" | "saves" | "reach" | "engagementRate">;
 type SortDir = "asc" | "desc";
+type PlatformTab = "All" | "Instagram" | "YouTube" | "Facebook";
 
 const PLATFORM_BADGE_STYLE: Record<string, string> = {
   instagram: "bg-pink-500/10 text-pink-400 border border-pink-500/20",
@@ -40,13 +41,18 @@ export function ContentPerformance() {
 
   const [sortKey, setSortKey] = useState<SortKey>("engagementRate");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
+  const [platformTab, setPlatformTab] = useState<PlatformTab>("All");
 
   const toggle = (key: SortKey) => {
     if (sortKey === key) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
     else { setSortKey(key); setSortDir("desc"); }
   };
 
-  const sorted = [...filtered.contentPosts].sort((a, b) => {
+  const tabFiltered = filtered.contentPosts.filter((p) =>
+    platformTab === "All" ? true : p.platform === platformTab.toLowerCase()
+  );
+
+  const sorted = [...tabFiltered].sort((a, b) => {
     const av = a[sortKey] as number;
     const bv = b[sortKey] as number;
     return sortDir === "asc" ? av - bv : bv - av;
@@ -59,7 +65,7 @@ export function ContentPerformance() {
 
   return (
     <section className="px-6 py-4 border-t border-border">
-      <div className="flex items-center justify-between mb-3">
+      <div className="flex items-start justify-between mb-3">
         <div>
           <h2 className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
             Content Performance
@@ -70,6 +76,33 @@ export function ContentPerformance() {
           <p className="text-[10px] text-muted-foreground/60">Likes · Comments · Shares · Saves · Reach · Engagement rate · March 2026</p>
         </div>
         <AIInsightButton section="Content Performance" data={filtered.contentPosts} />
+      </div>
+
+      {/* Platform tab filter — matches reference */}
+      <div className="flex gap-1 mb-3">
+        {(["All", "Instagram", "YouTube", "Facebook"] as PlatformTab[]).map((t) => (
+          <button
+            key={t}
+            onClick={() => setPlatformTab(t)}
+            className={cn(
+              "flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors border",
+              platformTab === t
+                ? "bg-foreground text-background border-transparent"
+                : "text-muted-foreground border-border hover:bg-muted"
+            )}
+          >
+            {t !== "All" && (
+              <span
+                className="w-1.5 h-1.5 rounded-full"
+                style={{ background: t === "Instagram" ? "#E1306C" : t === "YouTube" ? "#FF0000" : "#1877F2" }}
+              />
+            )}
+            {t}
+          </button>
+        ))}
+        <span className="ml-auto text-[10px] text-muted-foreground self-center">
+          {sorted.length} post{sorted.length !== 1 ? "s" : ""}
+        </span>
       </div>
 
       <div className="rounded-xl border border-border overflow-hidden">

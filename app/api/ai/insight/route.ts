@@ -6,17 +6,16 @@ const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 export async function POST(req: NextRequest) {
   const { section, data } = await req.json();
 
-  const prompt = `You are analyzing a section of a social media analytics dashboard for a fitness brand called "Rare Fitness".
+  const prompt = `You are analyzing a section of a social media analytics dashboard for "Rare Fitness" fitness brand.
 
 Section: ${section}
 Data: ${JSON.stringify(data, null, 2)}
 
-Write exactly 2-3 sentences of insight:
-1. What is notable or interesting in this data?
-2. Why does it matter for the brand?
-3. One specific, actionable recommendation based on the numbers.
+Respond using EXACTLY this format — no markdown, no extra text:
 
-Be direct and specific — use the actual numbers. No fluff, no markdown headers. Plain text only.`;
+1. [Key observation — cite the specific number that stands out most]
+2. [Why this matters — business impact for the fitness brand]
+3. [One concrete recommendation — specific and actionable]`;
 
   const encoder = new TextEncoder();
 
@@ -26,6 +25,7 @@ Be direct and specific — use the actual numbers. No fluff, no markdown headers
         const stream = await groq.chat.completions.create({
           model: "llama-3.3-70b-versatile",
           max_tokens: 200,
+          temperature: 0.4,
           messages: [{ role: "user", content: prompt }],
           stream: true,
         });
@@ -40,8 +40,7 @@ Be direct and specific — use the actual numbers. No fluff, no markdown headers
         }
         controller.enqueue(encoder.encode("data: [DONE]\n\n"));
       } catch (err: unknown) {
-        const msg =
-          err instanceof Error ? err.message : "AI request failed";
+        const msg = err instanceof Error ? err.message : "AI request failed";
         controller.enqueue(
           encoder.encode(`data: ${JSON.stringify({ error: msg })}\n\n`)
         );

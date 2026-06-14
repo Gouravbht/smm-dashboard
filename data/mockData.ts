@@ -189,6 +189,19 @@ export const MOCK_DATA: DashboardData = {
       reach: 6400,
       engagementRate: 2.4,
     },
+    {
+      id: "p9",
+      title: "Saved Exercises — Elderly",
+      platform: "instagram",
+      type: "Carousel",
+      date: "8 March 2026",
+      likes: 314,
+      comments: 59,
+      shares: 35,
+      saves: 228,
+      reach: 12400,
+      engagementRate: 2.4,
+    },
   ],
 
   videoCompletion: [
