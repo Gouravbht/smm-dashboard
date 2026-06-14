@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import type { Platform } from "@/types";
 import { Moon, Sun, Search, Bell, ChevronRight, Calendar, SlidersHorizontal } from "lucide-react";
 import { useTheme } from "next-themes";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const PLATFORMS: Platform[] = ["instagram", "youtube", "facebook"];
 
@@ -23,6 +23,8 @@ export function Header() {
   const { activePlatforms, togglePlatform, setAllPlatforms, dateRange, setDateRange } =
     useFilterStore();
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   const allActive = activePlatforms.length === 3;
 
@@ -117,7 +119,11 @@ export function Header() {
         onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
         className="h-7 w-7 flex items-center justify-center rounded-md border border-border hover:bg-muted transition-colors text-muted-foreground"
       >
-        {theme === "dark" ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
+        {mounted ? (
+          theme === "dark" ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />
+        ) : (
+          <Moon className="w-3.5 h-3.5" />
+        )}
       </button>
 
       {/* Bell */}

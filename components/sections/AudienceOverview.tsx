@@ -81,11 +81,11 @@ export function AudienceOverview() {
               {isContent && (
                 <div className="h-6 flex items-end">
                   <div className="flex gap-0.5 w-full">
-                    {[...Array(5)].map((_, i) => (
+                    {[10, 16, 12, 18, 14].map((h, i) => (
                       <div
                         key={i}
                         className="flex-1 rounded-sm bg-muted/80"
-                        style={{ height: `${8 + Math.random() * 12}px` }}
+                        style={{ height: `${h}px` }}
                       />
                     ))}
                   </div>
