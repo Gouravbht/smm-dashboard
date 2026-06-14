@@ -23,9 +23,9 @@ export function AudienceByLocation() {
 
   return (
     <Section label="Audience by Location">
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* LEFT: location list */}
-        <Panel className="col-span-2 flex flex-col">
+        <Panel className="lg:col-span-2 flex flex-col">
           <div className="flex items-start justify-between px-5 pt-5 pb-3">
             <div>
               <h3 className="text-[15px] font-bold text-foreground tracking-tight">Top Locations — Combined Audience</h3>
@@ -35,8 +35,8 @@ export function AudienceByLocation() {
           </div>
 
           {/* Tabs + dropdowns */}
-          <div className="flex items-center justify-between px-5 mb-3">
-            <div className="flex gap-1">
+          <div className="flex items-center justify-between gap-2 flex-wrap px-5 mb-3">
+            <div className="flex gap-1 flex-wrap">
               {TABS.map(({ key, icon: Icon }) => (
                 <button key={key} onClick={() => setTab(key)}
                   className={cn("flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium transition-colors",
@@ -59,7 +59,7 @@ export function AudienceByLocation() {
               <div key={loc.city} className="flex items-center gap-3">
                 <span className="text-[11px] text-muted-foreground/50 w-4 text-right">{i + 1}</span>
                 <span className="w-1.5 h-1.5 rounded-full bg-foreground/70 shrink-0" />
-                <span className="text-[12px] font-medium text-foreground w-48 shrink-0 truncate">{loc.city}</span>
+                <span className="text-[12px] font-medium text-foreground w-24 sm:w-48 shrink-0 truncate">{loc.city}</span>
                 <div className="flex-1 h-[3px] rounded-full bg-muted overflow-hidden">
                   <div className="h-full rounded-full bg-foreground/80" style={{ width: `${(loc.count / maxCount) * 100}%` }} />
                 </div>

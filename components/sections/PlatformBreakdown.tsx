@@ -4,10 +4,12 @@ import { useDashboardStore } from "@/store/dashboardStore";
 import { useFilterStore } from "@/store/filterStore";
 import { AIInsightButton } from "@/components/ai/AIInsightButton";
 import { Section } from "@/components/layout/Section";
+import { PlatformSkeletons } from "@/components/ui/Skeleton";
 import { ArrowUp, Check } from "lucide-react";
 import { InstagramIcon, YoutubeIcon, FacebookIcon } from "@/components/ui/brand-icons";
 import { platformColor } from "@/lib/utils";
 import type { PlatformMetrics } from "@/types";
+import { useState, useEffect } from "react";
 
 const ICONS = {
   instagram: InstagramIcon,
@@ -65,16 +67,26 @@ export function PlatformBreakdown() {
   const { activePlatforms } = useFilterStore();
   const { platforms } = getFilteredData(activePlatforms);
 
+  const [loaded, setLoaded] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setLoaded(true), 1200);
+    return () => clearTimeout(t);
+  }, []);
+
   return (
-    <Section label="Platform Breakdown">
-      <div className="flex items-center justify-end -mt-7 mb-2">
-        <AIInsightButton section="Platform Breakdown" data={platforms} />
-      </div>
-      <div className="grid grid-cols-3 gap-4">
-        {platforms.map((p) => (
-          <PlatformCard key={p.platform} p={p} />
-        ))}
-      </div>
+    <Section
+      label="Platform Breakdown"
+      action={<AIInsightButton section="Platform Breakdown" data={platforms} />}
+    >
+      {!loaded ? (
+        <PlatformSkeletons />
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {platforms.map((p) => (
+            <PlatformCard key={p.platform} p={p} />
+          ))}
+        </div>
+      )}
     </Section>
   );
 }

@@ -1,4 +1,45 @@
-import type { DashboardData } from "@/types";
+import type { DashboardData, GrowthDataPoint, KPI } from "@/types";
+
+// Apr 2024 – Mar 2025 (previous year) for MoM chart overlay
+export const PREV_YEAR_GROWTH: GrowthDataPoint[] = [
+  { month: "Apr", instagram: 10200, youtube: 7800, facebook: 4000 },
+  { month: "May", instagram: 10600, youtube: 8000, facebook: 4200 },
+  { month: "Jun", instagram: 11000, youtube: 8200, facebook: 4400 },
+  { month: "Jul", instagram: 11400, youtube: 8400, facebook: 4600 },
+  { month: "Aug", instagram: 11800, youtube: 8600, facebook: 4850 },
+  { month: "Sep", instagram: 12200, youtube: 8800, facebook: 5100 },
+  { month: "Oct", instagram: 12500, youtube: 9000, facebook: 5300 },
+  { month: "Nov", instagram: 12800, youtube: 9200, facebook: 5500 },
+  { month: "Dec", instagram: 13100, youtube: 9500, facebook: 5700 },
+  { month: "Jan", instagram: 13300, youtube: 9700, facebook: 5900 },
+  { month: "Feb", instagram: 13550, youtube: 9850, facebook: 6100 },
+  { month: "Mar", instagram: 13800, youtube: 10000, facebook: 5400 },
+];
+
+// Scale factor per date range label (multiplies reach / content published / followerGrowth)
+const DATE_SCALE: Record<string, number> = {
+  "Mar 1 – Mar 31": 1.0,
+  "Last 7 days":    0.25,
+  "Last 90 days":   3.1,
+  "Last 6 months":  6.2,
+  "Last 12 months": 12.4,
+};
+
+export function scaledKPI(base: KPI, rangeLabel: string): KPI {
+  const m = DATE_SCALE[rangeLabel] ?? 1.0;
+  if (m === 1.0) return base;
+  return {
+    ...base,
+    totalReach: Math.round(base.totalReach * m),
+    followerGrowth: Math.round(base.followerGrowth * m),
+    contentPublished: Math.round(base.contentPublished * m),
+    contentByPlatform: {
+      instagram: Math.round(base.contentByPlatform.instagram * m),
+      youtube:   Math.round(base.contentByPlatform.youtube   * m),
+      facebook:  Math.round(base.contentByPlatform.facebook  * m),
+    },
+  };
+}
 
 export const MOCK_DATA: DashboardData = {
   kpi: {
