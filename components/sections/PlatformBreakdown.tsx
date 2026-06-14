@@ -3,143 +3,78 @@
 import { useDashboardStore } from "@/store/dashboardStore";
 import { useFilterStore } from "@/store/filterStore";
 import { AIInsightButton } from "@/components/ai/AIInsightButton";
-import { platformColor, platformLabel, cn } from "@/lib/utils";
-import { TrendingUp, TrendingDown } from "lucide-react";
+import { Section } from "@/components/layout/Section";
+import { ArrowUp, Check } from "lucide-react";
+import { InstagramIcon, YoutubeIcon, FacebookIcon } from "@/components/ui/brand-icons";
+import { platformColor } from "@/lib/utils";
 import type { PlatformMetrics } from "@/types";
 
-const PLATFORM_ICONS: Record<string, string> = {
-  instagram: "📸",
-  youtube: "▶",
-  facebook: "f",
-};
-
-const PLATFORM_POSTS_LABEL: Record<string, string> = {
-  instagram: "posts",
-  youtube: "videos",
-  facebook: "posts",
-};
-
-function MoMBadge({ value }: { value: number }) {
-  if (value === undefined || value === null) return null;
-  const pos = value > 0;
-  return (
-    <span className={cn(
-      "text-[10px] font-semibold flex items-center gap-0.5",
-      pos ? "text-green-400" : "text-red-400"
-    )}>
-      {pos ? <TrendingUp className="w-2.5 h-2.5" /> : <TrendingDown className="w-2.5 h-2.5" />}
-      {pos ? "+" : ""}{value}%
-    </span>
-  );
-}
-
-function MetricRow({ label, value, sub }: { label: string; value: string | number; sub?: string }) {
-  return (
-    <div className="flex flex-col">
-      <p className="text-base font-bold text-foreground">{value}</p>
-      {sub && <p className="text-[10px] text-muted-foreground">{sub}</p>}
-      <p className="text-[10px] text-muted-foreground uppercase tracking-wide mt-0.5">{label}</p>
-    </div>
-  );
-}
+const ICONS = {
+  instagram: InstagramIcon,
+  youtube: YoutubeIcon,
+  facebook: FacebookIcon,
+} as const;
 
 function PlatformCard({ p }: { p: PlatformMetrics }) {
+  const Icon = ICONS[p.platform];
   const color = platformColor(p.platform);
-  const postsLabel = PLATFORM_POSTS_LABEL[p.platform];
 
   return (
-    <div className="rounded-xl border border-border bg-card p-4 flex flex-col gap-3">
+    <div className="rounded-xl border border-border bg-card p-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div
-            className="w-6 h-6 rounded flex items-center justify-center text-white text-xs font-bold"
-            style={{ background: color }}
-          >
-            {PLATFORM_ICONS[p.platform]}
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: color }}>
+            <Icon className="text-white" style={{ width: 18, height: 18 }} />
           </div>
           <div>
-            <p className="text-sm font-semibold text-foreground">{platformLabel(p.platform)}</p>
-            <p className="text-[10px] text-muted-foreground">{p.handle}</p>
+            <p className="text-[15px] font-bold text-foreground leading-tight">{p.name}</p>
+            <p className="text-[11px] text-muted-foreground">{p.handle}</p>
           </div>
         </div>
-        <span className="text-[10px] text-muted-foreground">{p.posts} {postsLabel}</span>
+        <span className="text-[11px] text-muted-foreground">{p.postsLabel}</span>
       </div>
 
-      {/* Key metrics */}
-      <div className="grid grid-cols-3 gap-3 py-2 border-y border-border">
-        <div>
-          <p className="text-lg font-bold text-foreground">
-            {p.followers >= 1_000 ? `${(p.followers / 1000).toFixed(0)},${String(p.followers % 1000).padStart(3, "0")}` : p.followers}
-          </p>
-          <div className="flex items-center gap-1">
-            <MoMBadge value={p.followersMoM} />
-          </div>
-          <p className="text-[10px] text-muted-foreground uppercase tracking-wide mt-0.5">
-            {p.platform === "youtube" ? "SUBSCRIBERS" : "FOLLOWERS"}
-          </p>
-        </div>
-        <div>
-          <p className="text-lg font-bold text-foreground">
-            {p.reach >= 1_000 ? `${(p.reach / 1000).toFixed(0)},${String(p.reach % 1000).padStart(3, "0")}` : p.reach}
-          </p>
-          <p className="text-[10px] text-muted-foreground uppercase tracking-wide mt-0.5">REACH (MAR)</p>
-        </div>
-        <div>
-          <p className="text-lg font-bold text-foreground">{p.engagementRate}%</p>
-          <div className="flex items-center gap-1">
-            <MoMBadge value={p.engRateMoM} />
-          </div>
-          <p className="text-[10px] text-muted-foreground uppercase tracking-wide mt-0.5">ENG. RATE</p>
-        </div>
-      </div>
+      {/* Metrics grid: 2 rows × 3 */}
+      <div className="grid grid-cols-3 gap-x-3 gap-y-4">
+        {p.metrics.map((m, i) => (
+          <div key={i}>
+            <p className="text-[19px] font-bold text-foreground leading-none tracking-tight">{m.value}</p>
 
-      {/* Platform-specific metrics */}
-      <div className="grid grid-cols-3 gap-3">
-        {p.platform === "instagram" && (
-          <>
-            <MetricRow label="LIKES" value={p.likes.toLocaleString("en-IN")} sub="+14%" />
-            <MetricRow label="COMMENTS" value={p.comments.toLocaleString("en-IN")} sub="+48%" />
-            <MetricRow label="SAVES" value={(p.saves ?? 0).toLocaleString("en-IN")} />
-          </>
-        )}
-        {p.platform === "youtube" && (
-          <>
-            <MetricRow label="WATCH TIME" value={p.watchTime ?? "—"} />
-            <MetricRow label="AVG DURATION" value={p.avgDuration ?? "—"} />
-            <MetricRow label="COMMENTS" value={(p.comments ?? 0).toLocaleString("en-IN")} sub="+17%" />
-          </>
-        )}
-        {p.platform === "facebook" && (
-          <>
-            <MetricRow label="REACTIONS" value={(p.reactions ?? 0).toLocaleString("en-IN")} sub="+46%" />
-            <MetricRow label="COMMENTS" value={p.comments.toLocaleString("en-IN")} sub="+14%" />
-            <MetricRow label="SHARES" value={(p.shares ?? 0).toLocaleString("en-IN")} sub="+44%" />
-          </>
-        )}
+            {m.delta && (
+              <div className="flex items-center gap-0.5 mt-1">
+                <ArrowUp className="w-2.5 h-2.5 text-emerald-500" strokeWidth={3} />
+                <span className="text-[10px] font-semibold text-emerald-500">{m.delta}</span>
+              </div>
+            )}
+            {m.sub && <p className="text-[10px] text-muted-foreground mt-1">{m.sub}</p>}
+
+            <div className="flex items-center gap-1 mt-1">
+              <p className="text-[9px] font-medium text-muted-foreground uppercase tracking-wider">{m.label}</p>
+              {m.check && <Check className="w-2.5 h-2.5 text-muted-foreground/50" strokeWidth={3} />}
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
 }
 
 export function PlatformBreakdown() {
-  const { data, getFilteredData } = useDashboardStore();
+  const { getFilteredData } = useDashboardStore();
   const { activePlatforms } = useFilterStore();
-  const filtered = getFilteredData(activePlatforms);
+  const { platforms } = getFilteredData(activePlatforms);
 
   return (
-    <section className="px-6 py-4 border-t border-border">
-      <div className="flex items-center justify-between mb-3">
-        <h2 className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-          Platform Breakdown
-        </h2>
-        <AIInsightButton section="Platform Breakdown" data={filtered.platforms} />
+    <Section label="Platform Breakdown">
+      <div className="flex items-center justify-end -mt-7 mb-2">
+        <AIInsightButton section="Platform Breakdown" data={platforms} />
       </div>
       <div className="grid grid-cols-3 gap-4">
-        {filtered.platforms.map((p) => (
+        {platforms.map((p) => (
           <PlatformCard key={p.platform} p={p} />
         ))}
       </div>
-    </section>
+    </Section>
   );
 }

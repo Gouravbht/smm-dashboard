@@ -3,98 +3,76 @@
 import { useDashboardStore } from "@/store/dashboardStore";
 import { useFilterStore } from "@/store/filterStore";
 import { AIInsightButton } from "@/components/ai/AIInsightButton";
-import { formatCompact, formatMoM, cn } from "@/lib/utils";
-import { TrendingUp, TrendingDown, Users, UserPlus, Eye, Activity, FileText } from "lucide-react";
+import { Section } from "@/components/layout/Section";
+import { cn } from "@/lib/utils";
 
-const KPI_CONFIG = [
-  { key: "totalFollowers",      label: "Total Followers",       icon: Users,      format: (v: number) => v.toLocaleString("en-IN") },
-  { key: "followerGrowth",      label: "Follower Growth (MTM)", icon: UserPlus,   format: (v: number) => `+${v.toLocaleString("en-IN")}` },
-  { key: "totalReach",          label: "Total Reach (Mar)",     icon: Eye,        format: (v: number) => `${(v/1_000_000).toFixed(2)}M` },
-  { key: "avgEngagementRate",   label: "Avg Engagement Rate",   icon: Activity,   format: (v: number) => `${v}%` },
-  { key: "contentPublished",    label: "Content Published",     icon: FileText,   format: (v: number, kpi: Record<string, unknown>) => {
-    const c = kpi.contentByPlatform as { instagram: number; youtube: number; facebook: number };
-    return `${v}\n${c.instagram} IG · ${c.youtube} YT · ${c.facebook} FB`;
-  }},
-] as const;
+interface KpiCard {
+  label: string;
+  value: string;
+  badge?: string;
+  sub?: string;
+  trend: number[];
+}
 
-export function AudienceOverview() {
-  const { data, getFilteredData } = useDashboardStore();
-  const { activePlatforms } = useFilterStore();
-  const filtered = getFilteredData(activePlatforms);
-  const kpi = filtered.kpi;
+function Sparkline({ points }: { points: number[] }) {
+  const w = 200;
+  const h = 36;
+  const max = Math.max(...points);
+  const min = Math.min(...points);
+  const range = max - min || 1;
+  const step = w / (points.length - 1);
+  const path = points
+    .map((p, i) => `${i === 0 ? "M" : "L"} ${i * step} ${h - ((p - min) / range) * (h - 6) - 3}`)
+    .join(" ");
 
   return (
-    <section className="px-6 py-4">
-      <div className="flex items-center justify-between mb-3">
-        <h2 className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-          Audience Overview
-        </h2>
+    <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" className="w-full h-9">
+      <path d={path} fill="none" stroke="currentColor" strokeWidth="1.5" className="text-foreground/30" />
+    </svg>
+  );
+}
+
+export function AudienceOverview() {
+  const { getFilteredData } = useDashboardStore();
+  const { activePlatforms } = useFilterStore();
+  const { kpi } = getFilteredData(activePlatforms);
+
+  const cards: KpiCard[] = [
+    { label: "Total Followers",       value: kpi.totalFollowers.toLocaleString("en-IN"), badge: `+${kpi.mom.totalFollowers}%`, trend: [30, 32, 33, 35, 36, 38, 40, 42, 44, 46, 48, 52] },
+    { label: "Follower Growth (MTM)", value: `+${kpi.followerGrowth}`, badge: `+${kpi.mom.followerGrowth}%`, trend: [20, 24, 22, 28, 26, 32, 30, 36, 34, 40, 44, 48] },
+    { label: "Total Reach (Mar)",     value: kpi.totalReach.toLocaleString("en-IN"), badge: `+${kpi.mom.totalReach}%`, trend: [25, 28, 26, 30, 34, 31, 36, 33, 38, 42, 40, 46] },
+    { label: "Avg Engagement Rate",   value: `${kpi.avgEngagementRate}%`, badge: `+${kpi.mom.avgEngagementRate}%`, trend: [22, 24, 23, 26, 25, 28, 27, 30, 29, 31, 30, 33] },
+    { label: "Content Published",     value: `${kpi.contentPublished}`, sub: `${kpi.contentByPlatform.instagram} IG · ${kpi.contentByPlatform.youtube} YT · ${kpi.contentByPlatform.facebook} FB`, trend: [38, 30, 42, 28, 44, 36, 32, 40, 34, 46, 30, 42] },
+  ];
+
+  return (
+    <Section label="Audience Overview">
+      <div className="flex items-center justify-end -mt-7 mb-2">
         <AIInsightButton section="Audience Overview" data={kpi} />
       </div>
+      <div className="grid grid-cols-5 gap-4">
+        {cards.map((card) => (
+          <div key={card.label} className="rounded-xl border border-border bg-card p-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)] flex flex-col">
+            <p className="text-[12px] text-muted-foreground font-medium">{card.label}</p>
+            <p className="text-[26px] font-bold text-foreground tracking-tight mt-1 leading-none">{card.value}</p>
 
-      <div className="grid grid-cols-5 gap-3">
-        {KPI_CONFIG.map(({ key, label, icon: Icon, format }) => {
-          const value = kpi[key as keyof typeof kpi] as number;
-          const momKey = key as keyof typeof kpi.mom;
-          const mom = kpi.mom[momKey as keyof typeof kpi.mom] as number | undefined;
-          const isPositive = mom !== undefined ? mom > 0 : true;
-          const isContent = key === "contentPublished";
-
-          const formatted = format(value, kpi as unknown as Record<string, unknown>);
-          const lines = formatted.split("\n");
-
-          return (
-            <div
-              key={key}
-              className="rounded-xl border border-border bg-card p-4 flex flex-col gap-2"
-            >
-              <div className="flex items-center justify-between">
-                <p className="text-[11px] text-muted-foreground font-medium leading-tight">{label}</p>
-                <Icon className="w-3.5 h-3.5 text-muted-foreground/50" />
+            {card.badge ? (
+              <div className="flex items-center gap-1.5 mt-2">
+                <span className="text-[10px] font-semibold text-foreground bg-muted px-1.5 py-0.5 rounded">
+                  {card.badge}
+                </span>
+                <span className="text-[10px] text-muted-foreground">vs last month</span>
               </div>
+            ) : (
+              <p className="text-[10px] text-muted-foreground mt-2">{card.sub}</p>
+            )}
 
-              <div>
-                <p className="text-2xl font-bold text-foreground tracking-tight">{lines[0]}</p>
-                {lines[1] && (
-                  <p className="text-[10px] text-muted-foreground mt-0.5">{lines[1]}</p>
-                )}
-              </div>
-
-              {mom !== undefined && !isContent && (
-                <div
-                  className={cn(
-                    "flex items-center gap-1 text-[10px] font-semibold w-fit px-1.5 py-0.5 rounded-md",
-                    isPositive
-                      ? "bg-green-500/10 text-green-400"
-                      : "bg-red-500/10 text-red-400"
-                  )}
-                >
-                  {isPositive ? (
-                    <TrendingUp className="w-3 h-3" />
-                  ) : (
-                    <TrendingDown className="w-3 h-3" />
-                  )}
-                  {formatMoM(mom)} vs last month
-                </div>
-              )}
-
-              {isContent && (
-                <div className="h-6 flex items-end">
-                  <div className="flex gap-0.5 w-full">
-                    {[10, 16, 12, 18, 14].map((h, i) => (
-                      <div
-                        key={i}
-                        className="flex-1 rounded-sm bg-muted/80"
-                        style={{ height: `${h}px` }}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
+            <div className="mt-3 -mb-1">
+              <Sparkline points={card.trend} />
             </div>
-          );
-        })}
+          </div>
+        ))}
       </div>
-    </section>
+    </Section>
   );
 }

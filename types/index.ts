@@ -29,25 +29,21 @@ export const KPISchema = z.object({
 export type KPI = z.infer<typeof KPISchema>;
 
 // ─── Platform Breakdown ───────────────────────────────────────────────────────
+export const MetricCellSchema = z.object({
+  label: z.string(),
+  value: z.string(),
+  delta: z.string().optional(),       // e.g. "+340 MTM", "+21%"
+  sub: z.string().optional(),         // e.g. "of 5:00 avg"
+  check: z.boolean().optional(),      // shows ✓ next to label
+});
+export type MetricCell = z.infer<typeof MetricCellSchema>;
+
 export const PlatformMetricsSchema = z.object({
   platform: PlatformSchema,
+  name: z.string(),
   handle: z.string(),
-  followers: z.number(),
-  followersMoM: z.number(),
-  reach: z.number(),
-  engagementRate: z.number(),
-  engRateMoM: z.number(),
-  posts: z.number(),
-  // Platform-specific
-  likes: z.number(),
-  comments: z.number(),
-  shares: z.number().optional(),
-  saves: z.number().optional(),
-  subscribers: z.number().optional(),
-  viewsMar: z.number().optional(),
-  watchTime: z.string().optional(),
-  avgDuration: z.string().optional(),
-  reactions: z.number().optional(),
+  postsLabel: z.string(),             // e.g. "22 posts", "14 videos"
+  metrics: z.array(MetricCellSchema), // 6 cells: 2 rows × 3
 });
 export type PlatformMetrics = z.infer<typeof PlatformMetricsSchema>;
 

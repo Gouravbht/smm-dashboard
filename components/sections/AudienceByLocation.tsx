@@ -2,109 +2,92 @@
 
 import { useDashboardStore } from "@/store/dashboardStore";
 import { AIInsightButton } from "@/components/ai/AIInsightButton";
-import { useFilterStore } from "@/store/filterStore";
+import { Section, Panel } from "@/components/layout/Section";
 import { cn } from "@/lib/utils";
+import { AtSign, MapPin, ChevronDown } from "lucide-react";
+import { InstagramIcon as Instagram, YoutubeIcon as Youtube, FacebookIcon as Facebook } from "@/components/ui/brand-icons";
+import { useState } from "react";
 
-const PLATFORM_TABS = ["All", "Instagram", "YouTube", "Facebook"] as const;
-type LocationTab = typeof PLATFORM_TABS[number];
+const TABS = [
+  { key: "All", icon: AtSign },
+  { key: "Instagram", icon: Instagram },
+  { key: "Youtube", icon: Youtube },
+  { key: "Facebook", icon: Facebook },
+] as const;
 
 export function AudienceByLocation() {
   const { data } = useDashboardStore();
-  const { activePlatforms } = useFilterStore();
   const { locations, punjabConcentration } = data;
+  const [tab, setTab] = useState<string>("All");
+  const maxCount = Math.max(...locations.map((l) => l.count));
 
   return (
-    <section className="px-6 py-4 border-t border-border">
-      <div className="flex items-center justify-between mb-3">
-        <div>
-          <h2 className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-            Audience by Location
-          </h2>
-          <p className="text-xs text-muted-foreground mt-0.5">Top Locations — Combined Audience</p>
-          <p className="text-[10px] text-muted-foreground/60">Instagram + Facebook: Meta Graph API · audience_location · city level · YouTube: country level only</p>
-        </div>
-        <AIInsightButton section="Audience by Location" data={{ locations, concentration: punjabConcentration }} />
-      </div>
-
-      <div className="grid grid-cols-5 gap-6">
-        {/* Location list */}
-        <div className="col-span-3">
-          {/* Platform tabs */}
-          <div className="flex gap-1 mb-3">
-            {PLATFORM_TABS.map((t) => (
-              <button
-                key={t}
-                className={cn(
-                  "px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors border",
-                  t === "All"
-                    ? "bg-foreground text-background border-transparent"
-                    : "text-muted-foreground border-border hover:bg-muted"
-                )}
-              >
-                {t}
-              </button>
-            ))}
-            <select className="ml-auto text-[11px] border border-border rounded-md px-2 py-1 bg-background text-foreground">
-              <option>India</option>
-            </select>
-            <select className="text-[11px] border border-border rounded-md px-2 py-1 bg-background text-foreground">
-              <option>All Locations</option>
-            </select>
+    <Section label="Audience by Location">
+      <div className="grid grid-cols-3 gap-4">
+        {/* LEFT: location list */}
+        <Panel className="col-span-2 flex flex-col">
+          <div className="flex items-start justify-between px-5 pt-5 pb-3">
+            <div>
+              <h3 className="text-[15px] font-bold text-foreground tracking-tight">Top Locations — Combined Audience</h3>
+              <p className="text-[11px] text-muted-foreground mt-0.5">Instagram + Facebook · Meta Graph API · audience_location · city level · YouTube country level only</p>
+            </div>
+            <AIInsightButton section="Audience by Location" data={{ locations, concentration: punjabConcentration }} />
           </div>
 
-          <div className="space-y-2">
+          {/* Tabs + dropdowns */}
+          <div className="flex items-center justify-between px-5 mb-3">
+            <div className="flex gap-1">
+              {TABS.map(({ key, icon: Icon }) => (
+                <button key={key} onClick={() => setTab(key)}
+                  className={cn("flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium transition-colors",
+                    tab === key ? "bg-muted text-foreground" : "text-muted-foreground hover:bg-muted/50")}>
+                  <Icon className="w-3.5 h-3.5" />{key}
+                </button>
+              ))}
+            </div>
+            <div className="flex gap-2">
+              {["India", "All Locations"].map((label) => (
+                <button key={label} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-medium text-muted-foreground border border-border hover:bg-muted/50 transition-colors">
+                  <MapPin className="w-3 h-3" />{label}<ChevronDown className="w-3 h-3" />
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="px-5 pb-5 space-y-2.5">
             {locations.map((loc, i) => (
               <div key={loc.city} className="flex items-center gap-3">
-                <span className="text-[10px] text-muted-foreground w-3 text-right">{i + 1}</span>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs font-medium text-foreground truncate">{loc.city}</span>
-                    <span className="text-[11px] font-semibold text-foreground ml-2 shrink-0">
-                      {loc.count.toLocaleString("en-IN")}
-                    </span>
-                  </div>
-                  <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-                    <div
-                      className="h-full rounded-full bg-indigo-500/60 transition-all duration-500"
-                      style={{ width: `${(loc.count / locations[0].count) * 100}%` }}
-                    />
-                  </div>
+                <span className="text-[11px] text-muted-foreground/50 w-4 text-right">{i + 1}</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-foreground/70 shrink-0" />
+                <span className="text-[12px] font-medium text-foreground w-48 shrink-0 truncate">{loc.city}</span>
+                <div className="flex-1 h-[3px] rounded-full bg-muted overflow-hidden">
+                  <div className="h-full rounded-full bg-foreground/80" style={{ width: `${(loc.count / maxCount) * 100}%` }} />
                 </div>
+                <span className="text-[12px] font-semibold text-foreground w-14 text-right shrink-0">{loc.count.toLocaleString("en-IN")}</span>
+                <span className="text-[11px] text-muted-foreground/60 w-8 text-right shrink-0">{loc.percentage}%</span>
               </div>
             ))}
           </div>
-        </div>
+        </Panel>
 
-        {/* Punjab concentration */}
-        <div className="col-span-2 flex flex-col">
-          <div className="rounded-xl border border-border bg-card p-5 flex flex-col items-center text-center flex-1">
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-3">Punjab Concentration</p>
-            <div className="relative w-32 h-32 mb-4">
-              {/* Circular progress */}
-              <svg viewBox="0 0 120 120" className="w-full h-full -rotate-90">
-                <circle cx="60" cy="60" r="50" fill="none" stroke="hsl(var(--muted))" strokeWidth="10" />
-                <circle
-                  cx="60" cy="60" r="50"
-                  fill="none"
-                  stroke="#6366f1"
-                  strokeWidth="10"
-                  strokeDasharray={`${punjabConcentration.percentage * 3.14159} ${100 * 3.14159}`}
-                  strokeLinecap="round"
-                />
-              </svg>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-3xl font-black text-foreground">{punjabConcentration.percentage}%</span>
-              </div>
-            </div>
-            <p className="text-sm font-bold text-foreground mb-1">of total audience</p>
-            <p className="text-[10px] text-muted-foreground mb-3">is in Punjab</p>
-            <div className="rounded-lg bg-indigo-500/5 border border-indigo-500/20 p-3 text-[11px] text-muted-foreground leading-relaxed text-left">
-              <span className="text-indigo-400 font-bold mr-1">✦</span>
-              {punjabConcentration.description}
-            </div>
+        {/* RIGHT: Punjab concentration */}
+        <Panel className="flex flex-col p-5">
+          <h3 className="text-[15px] font-bold text-foreground tracking-tight mb-4">Punjab Concentration</h3>
+          <p className="text-[44px] font-black text-foreground leading-none">{punjabConcentration.percentage}%</p>
+          <p className="text-[11px] text-muted-foreground mt-2">of total audience in Punjab</p>
+          <div className="h-2 rounded-full bg-muted overflow-hidden mt-3">
+            <div className="h-full rounded-full bg-foreground" style={{ width: `${punjabConcentration.percentage}%` }} />
           </div>
-        </div>
+          <div className="mt-4 flex gap-2.5 rounded-lg bg-muted/60 border border-border/60 px-3 py-3">
+            <div className="w-4 h-4 rounded bg-foreground flex items-center justify-center shrink-0 mt-0.5">
+              <svg viewBox="0 0 24 24" className="w-2.5 h-2.5 fill-background"><path d="M12 2l1.9 5.8L20 9.7l-4.9 3.6L17 19l-5-3.6L7 19l1.9-5.7L4 9.7l6.1-1.9z" /></svg>
+            </div>
+            <p className="text-[11px] text-muted-foreground leading-relaxed">
+              <strong className="text-foreground">Strong local concentration.</strong> Diaspora (UAE + UK) is 7% and growing — consider targeted diaspora content in English/Punjabi.
+            </p>
+          </div>
+        </Panel>
       </div>
-    </section>
+    </Section>
   );
 }

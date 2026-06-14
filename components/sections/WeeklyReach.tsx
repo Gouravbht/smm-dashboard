@@ -3,22 +3,26 @@
 import { useDashboardStore } from "@/store/dashboardStore";
 import { useFilterStore } from "@/store/filterStore";
 import { AIInsightButton } from "@/components/ai/AIInsightButton";
+import { Section, Panel, AICallout } from "@/components/layout/Section";
 import { platformColor, platformLabel, cn } from "@/lib/utils";
+import { AtSign, MoreVertical } from "lucide-react";
+import { InstagramIcon as Instagram, YoutubeIcon as Youtube, FacebookIcon as Facebook } from "@/components/ui/brand-icons";
 import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-  LabelList,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LabelList,
 } from "recharts";
 import { useState } from "react";
 
-type TabFilter = "All" | "Instagram" | "YouTube" | "Facebook";
-const TABS: TabFilter[] = ["All", "Instagram", "YouTube", "Facebook"];
+type Tab = "All" | "Instagram" | "Youtube" | "Facebook";
+type IconType = React.ComponentType<{ className?: string }>;
+const TABS: { key: Tab; icon: IconType }[] = [
+  { key: "All", icon: AtSign },
+  { key: "Instagram", icon: Instagram },
+  { key: "Youtube", icon: Youtube },
+  { key: "Facebook", icon: Facebook },
+];
+
+// Stack order bottom→top matches reference: YouTube (red) base, Instagram (pink), Facebook (blue)
+const STACK_ORDER = ["youtube", "instagram", "facebook"] as const;
 
 function formatY(v: number) {
   if (v >= 1000) return `${(v / 1000).toFixed(0)}k`;
@@ -26,124 +30,74 @@ function formatY(v: number) {
 }
 
 export function WeeklyReach() {
-  const { data, getFilteredData } = useDashboardStore();
+  const { getFilteredData } = useDashboardStore();
   const { activePlatforms } = useFilterStore();
-  const filtered = getFilteredData(activePlatforms);
-  const [tab, setTab] = useState<TabFilter>("All");
-
-  const chartData = filtered.weeklyReach.map((w) => {
-    if (tab === "All") return w;
-    const key = tab.toLowerCase() as "instagram" | "youtube" | "facebook";
-    return { week: w.week, [key]: w[key], total: w[key] };
-  });
+  const { weeklyReach } = getFilteredData(activePlatforms);
+  const [tab, setTab] = useState<Tab>("All");
 
   const showPlatforms =
     tab === "All"
-      ? (["instagram", "youtube", "facebook"] as const).filter((p) => activePlatforms.includes(p))
+      ? STACK_ORDER.filter((p) => activePlatforms.includes(p))
       : [tab.toLowerCase() as "instagram" | "youtube" | "facebook"];
 
   return (
-    <section className="px-6 py-4 border-t border-border">
-      <div className="flex items-center justify-between mb-3">
-        <div>
-          <h2 className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-            Reach & Impressions
-          </h2>
-          <p className="text-xs text-muted-foreground mt-0.5">Weekly Reach by Platform — March 2026</p>
-          <p className="text-[10px] text-muted-foreground/60">Stacked reach: Instagram + YouTube + Facebook</p>
+    <Section label="Reach & Impressions">
+      <Panel>
+        <div className="flex items-start justify-between px-5 pt-5 pb-3">
+          <div>
+            <h3 className="text-[15px] font-bold text-foreground tracking-tight">Weekly Reach by Platform — March 2026</h3>
+            <p className="text-[11px] text-muted-foreground mt-0.5">Stacked reach: Instagram + YouTube + Facebook · Meta Graph API + YouTube Data API v3</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <AIInsightButton section="Weekly Reach" data={weeklyReach} />
+            <button className="text-muted-foreground/50 hover:text-muted-foreground"><MoreVertical className="w-4 h-4" /></button>
+          </div>
         </div>
-        <AIInsightButton section="Weekly Reach" data={filtered.weeklyReach} />
-      </div>
 
-      {/* Tab filter */}
-      <div className="flex gap-1 mb-3">
-        {TABS.map((t) => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
-            className={cn(
-              "flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors border",
-              tab === t
-                ? "bg-foreground text-background border-transparent"
-                : "text-muted-foreground border-border hover:bg-muted"
-            )}
-          >
-            {t !== "All" && (
-              <span
-                className="w-2 h-2 rounded-full"
-                style={{ background: platformColor(t.toLowerCase()) }}
-              />
-            )}
-            {t}
-          </button>
-        ))}
-      </div>
-
-      <div className="h-52">
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={chartData} margin={{ top: 16, right: 16, left: 0, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
-            <XAxis
-              dataKey="week"
-              tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
-              axisLine={false}
-              tickLine={false}
-            />
-            <YAxis
-              tickFormatter={formatY}
-              tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
-              axisLine={false}
-              tickLine={false}
-              width={36}
-            />
-            <Tooltip
-              contentStyle={{
-                background: "hsl(var(--popover))",
-                border: "1px solid hsl(var(--border))",
-                borderRadius: "8px",
-                fontSize: "11px",
-                color: "hsl(var(--foreground))",
-              }}
-              formatter={(value, name) => [
-                typeof value === "number" ? value.toLocaleString("en-IN") : value,
-                platformLabel(String(name)),
-              ]}
-            />
-            <Legend
-              formatter={(value) => (
-                <span style={{ fontSize: "11px", color: "hsl(var(--muted-foreground))" }}>
-                  {platformLabel(value)}
-                </span>
+        {/* Tabs */}
+        <div className="flex gap-1 px-5 mb-2">
+          {TABS.map(({ key, icon: Icon }) => (
+            <button
+              key={key}
+              onClick={() => setTab(key)}
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium transition-colors",
+                tab === key ? "bg-muted text-foreground" : "text-muted-foreground hover:bg-muted/50"
               )}
-            />
-            {showPlatforms.map((platform, idx) => (
-              <Bar
-                key={platform}
-                dataKey={platform}
-                stackId="a"
-                fill={platformColor(platform)}
-                radius={idx === showPlatforms.length - 1 ? [4, 4, 0, 0] : [0, 0, 0, 0]}
-              >
-                {idx === showPlatforms.length - 1 && (
-                  <LabelList
-                    dataKey="total"
-                    position="top"
-                    formatter={(v: unknown) => typeof v === "number" ? `${(v / 1000).toFixed(1)}k` : ""}
-                    style={{ fontSize: "10px", fill: "hsl(var(--muted-foreground))" }}
-                  />
-                )}
-              </Bar>
-            ))}
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
+            >
+              <Icon className="w-3.5 h-3.5" />
+              {key}
+            </button>
+          ))}
+        </div>
 
-      <div className="mt-2 p-2.5 rounded-lg bg-muted/40 border border-border text-[11px] text-muted-foreground leading-relaxed flex gap-2">
-        <span className="text-indigo-400 font-bold shrink-0">✦</span>
-        <p>
+        <div className="h-72 px-3 pb-2">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={weeklyReach} margin={{ top: 24, right: 16, left: 8, bottom: 8 }} barCategoryGap="30%">
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+              <XAxis dataKey="week" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} dy={6} />
+              <YAxis tickFormatter={formatY} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} width={40} domain={[0, 80000]} ticks={[0, 20000, 40000, 60000, 80000]} />
+              <Tooltip
+                cursor={{ fill: "hsl(var(--muted))", opacity: 0.4 }}
+                contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: "11px", color: "hsl(var(--foreground))" }}
+                formatter={(value, name) => [typeof value === "number" ? value.toLocaleString("en-IN") : value, platformLabel(String(name))]}
+              />
+              <Legend formatter={(value) => <span style={{ fontSize: "11px", color: "hsl(var(--muted-foreground))" }}>{platformLabel(value)}</span>} />
+              {showPlatforms.map((platform, idx) => (
+                <Bar key={platform} dataKey={platform} stackId="a" fill={platformColor(platform)} radius={idx === showPlatforms.length - 1 ? [4, 4, 0, 0] : [0, 0, 0, 0]} maxBarSize={90}>
+                  {idx === showPlatforms.length - 1 && (
+                    <LabelList dataKey="total" position="top" formatter={(v: unknown) => typeof v === "number" ? `${(v / 1000).toFixed(1)}k` : ""} style={{ fontSize: "12px", fontWeight: 700, fill: "hsl(var(--foreground))" }} />
+                  )}
+                </Bar>
+              ))}
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+
+        <AICallout>
           <strong className="text-foreground">Week 2 (Mar 8–14) was peak reach at 74,600</strong> — aligned with the Quality Life Plan Carousel launch and a high-engagement Reel. Week 4 dip reflects end-of-month reduced posting cadence. Instagram consistently drives 55–60% of total weekly reach.
-        </p>
-      </div>
-    </section>
+        </AICallout>
+      </Panel>
+    </Section>
   );
 }

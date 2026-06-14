@@ -3,118 +3,86 @@
 import { useDashboardStore } from "@/store/dashboardStore";
 import { useFilterStore } from "@/store/filterStore";
 import { AIInsightButton } from "@/components/ai/AIInsightButton";
+import { Section, Panel, AICallout } from "@/components/layout/Section";
 import { cn } from "@/lib/utils";
 import { ArrowRight } from "lucide-react";
 
-const STAGE_COLORS = [
-  "bg-indigo-500",
-  "bg-blue-500",
-  "bg-cyan-500",
-  "bg-teal-500",
-  "bg-emerald-500",
-  "bg-green-500",
-];
-
-const STAGE_BG = [
-  "bg-indigo-500/10 border-indigo-500/20",
-  "bg-blue-500/10 border-blue-500/20",
-  "bg-cyan-500/10 border-cyan-500/20",
-  "bg-teal-500/10 border-teal-500/20",
-  "bg-emerald-500/10 border-emerald-500/20",
-  "bg-green-500/10 border-green-500/20",
-];
-
-const STAGE_TEXT = [
-  "text-indigo-400",
-  "text-blue-400",
-  "text-cyan-400",
-  "text-teal-400",
-  "text-emerald-400",
-  "text-green-400",
-];
+function fmt(n: number) {
+  return n.toLocaleString("en-IN");
+}
 
 export function PostAttributionFunnel() {
-  const { data, getFilteredData } = useDashboardStore();
+  const { getFilteredData } = useDashboardStore();
   const { activePlatforms } = useFilterStore();
-  const filtered = getFilteredData(activePlatforms);
-  const funnel = filtered.attributionFunnel;
+  const { attributionFunnel } = getFilteredData(activePlatforms);
 
-  const maxCount = funnel[1].count; // Impressions is the widest stage
+  const conversions = ["0.93% CTR", "62% stay", "24% of sessions", "61% complete"];
 
   return (
-    <section className="px-6 py-4 border-t border-border">
-      <div className="flex items-center justify-between mb-3">
-        <div>
-          <h2 className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-            Raw Attribution Log
-          </h2>
-          <p className="text-xs text-muted-foreground mt-0.5">Post-to-Lead Conversion Flow — March 2026</p>
-          <p className="text-[10px] text-muted-foreground/60">Social post → UTM link → Landing page → Form → Lead captured · tracked via GA4 + UTM parameters</p>
+    <Section label="SMM Attribution Loop" className="pb-8">
+      <Panel>
+        <div className="flex items-start justify-between px-5 pt-5 pb-4">
+          <div>
+            <h3 className="text-[15px] font-bold text-foreground tracking-tight">Post-to-Lead Conversion Flow — March 2026</h3>
+            <p className="text-[11px] text-muted-foreground mt-0.5">Social post → UTM link → Landing page → Form → Lead captured · tracked via GA4 + UTM parameters</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] text-muted-foreground bg-muted px-2 py-1 rounded-md shrink-0">Instagram Reels — primary funnel</span>
+            <AIInsightButton section="Post Attribution Funnel" data={attributionFunnel} />
+          </div>
         </div>
-        <AIInsightButton section="Post Attribution Funnel" data={funnel} />
-      </div>
 
-      {/* Funnel Cards Row */}
-      <div className="flex items-start gap-0">
-        {funnel.map((stage, i) => {
-          const width = i === 0 ? 48 : Math.max(30, (stage.count / funnel[0].count) * 100);
-          return (
-            <div key={stage.stage} className="flex items-center flex-1">
-              <div
-                className={cn(
-                  "rounded-xl border p-3 flex flex-col gap-1 w-full",
-                  STAGE_BG[i]
-                )}
-              >
-                <p className={cn("text-xl font-black", STAGE_TEXT[i])}>
-                  {stage.count >= 1_000
-                    ? `${(stage.count / 1_000).toFixed(stage.count >= 100_000 ? 0 : 1)}k`
-                    : stage.count}
-                </p>
-                <p className="text-[10px] font-semibold text-foreground leading-tight">{stage.stage}</p>
-                {stage.rate && (
-                  <p className="text-[10px] text-muted-foreground">{stage.rate}</p>
-                )}
-              </div>
-              {i < funnel.length - 1 && (
-                <ArrowRight className="w-4 h-4 text-muted-foreground/40 mx-1 shrink-0" />
-              )}
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Funnel visualization bars */}
-      <div className="mt-4 space-y-1">
-        {funnel.map((stage, i) => {
-          const pct = i === 0 ? 100 : (stage.count / funnel[0].count) * 100;
-          return (
-            <div key={stage.stage} className="flex items-center gap-3">
-              <span className="text-[10px] text-muted-foreground w-36 shrink-0 truncate">{stage.stage}</span>
-              <div className="flex-1 h-5 bg-muted rounded-sm overflow-hidden relative">
-                <div
-                  className={cn("h-full rounded-sm transition-all duration-700 flex items-center pl-2", STAGE_COLORS[i])}
-                  style={{ width: `${pct}%` }}
-                >
-                  <span className="text-[9px] font-bold text-white">
-                    {stage.count >= 1_000 ? `${(stage.count / 1_000).toFixed(1)}k` : stage.count}
-                  </span>
+        {/* Funnel cards */}
+        <div className="px-5 flex items-stretch gap-0">
+          {attributionFunnel.map((stage, i) => {
+            const isFirst = i === 0;
+            const isLast = i === attributionFunnel.length - 1;
+            return (
+              <div key={stage.stage} className="flex items-center flex-1 min-w-0">
+                <div className={cn(
+                  "rounded-xl border p-3 flex-1 min-w-0 h-full flex flex-col",
+                  isFirst ? "bg-foreground border-foreground" : "bg-card border-border"
+                )}>
+                  <p className={cn("text-[10px] font-bold", isFirst ? "text-background/50" : "text-muted-foreground/40")}>
+                    {String(i + 1).padStart(2, "0")}
+                  </p>
+                  <p className={cn("text-[11px] font-semibold mt-1 leading-tight", isFirst ? "text-background" : "text-foreground")}>
+                    {stage.stage}
+                  </p>
+                  <p className={cn("text-[22px] font-black mt-1.5 leading-none tracking-tight",
+                    isLast ? "text-emerald-500" : isFirst ? "text-background" : "text-foreground")}>
+                    {fmt(stage.count)}
+                  </p>
+                  <p className={cn("text-[10px] mt-1.5", isFirst ? "text-background/60" : "text-muted-foreground")}>
+                    {stage.rate}
+                  </p>
                 </div>
+                {!isLast && <ArrowRight className="w-4 h-4 text-muted-foreground/30 mx-1 shrink-0" />}
               </div>
-              {stage.rate && (
-                <span className="text-[10px] text-muted-foreground w-24 shrink-0 text-right">{stage.rate}</span>
-              )}
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
 
-      <div className="mt-3 p-2.5 rounded-lg bg-muted/40 border border-border text-[11px] text-muted-foreground leading-relaxed flex gap-2">
-        <span className="text-indigo-400 font-bold shrink-0">✦</span>
-        <p>
-          <strong className="text-foreground">Instagram Reels → lead conversion rate: 8.1%</strong> (of link impressions → clicks). The biggest drop is at Link Clicks (only 0.93% of impressions click) — bio link + story swipe-up are the primary paths. Form completion 61% is strong once users reach the form. UTM parameters tracked via GA4 source/instagram, medium=social, campaign=reels.
-        </p>
-      </div>
-    </section>
+        {/* Conversion row */}
+        <div className="px-5 mt-3 flex items-center">
+          {attributionFunnel.map((_, i) => {
+            if (i === attributionFunnel.length - 1) return null;
+            return (
+              <div key={i} className="flex-1 flex items-center justify-center">
+                <span className={cn("text-[10px] font-medium",
+                  i === attributionFunnel.length - 2 ? "text-emerald-500" : "text-muted-foreground")}>
+                  → {conversions[i] ?? ""}
+                </span>
+              </div>
+            );
+          })}
+          <div className="w-5 shrink-0" />
+        </div>
+
+        <AICallout>
+          <strong className="text-foreground">Instagram Reels → lead conversion rate: 9.1% (of link clicks).</strong> The biggest drop is at Link Clicks (only 0.93% of impressions click) — bio link + Story swipe-up are the primary paths. Form completion (61%) is strong once users reach the form. UTM parameters tracked via GA4 source=instagram, medium=social, campaign=smm.
+        </AICallout>
+      </Panel>
+    </Section>
   );
 }

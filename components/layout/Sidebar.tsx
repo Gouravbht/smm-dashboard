@@ -2,131 +2,112 @@
 
 import { cn } from "@/lib/utils";
 import {
-  BarChart3,
-  Globe,
-  Megaphone,
-  Target,
-  TrendingUp,
-  Bot,
-  Settings,
-  Layers,
-  ChevronRight,
-  LayoutDashboard,
-  LineChart,
-  Share2,
+  LayoutGrid, Globe, Megaphone, Share2, DollarSign, Link2, Filter,
+  Bot, FileText, Plug, RefreshCw, PanelLeftClose,
+  Building2, BarChart3, ShoppingBag, Headphones, GraduationCap,
+  Smartphone, Dumbbell, Users, Sparkles, Settings,
 } from "lucide-react";
-import { useState } from "react";
 
-const navSections = [
+// Far-left icon rail
+const RAIL = [
+  { icon: Building2, label: "Brand" },
+  { icon: BarChart3, label: "Market", active: true },
+  { icon: ShoppingBag, label: "Sales" },
+  { icon: Headphones, label: "Service" },
+  { icon: GraduationCap, label: "Coaching" },
+  { icon: Smartphone, label: "App" },
+  { icon: Dumbbell, label: "Gym" },
+  { icon: Users, label: "Team" },
+  { icon: Sparkles, label: "AI" },
+  { icon: Settings, label: "Settings" },
+];
+
+// Main nav panel
+const NAV = [
   {
     label: "MARKETING",
     items: [
-      { icon: LayoutDashboard, label: "Summary", href: "#" },
-      { icon: Globe, label: "Web Analytics", href: "#" },
-      { icon: Megaphone, label: "Ads & Campaigns", href: "#" },
-      { icon: Share2, label: "Social Media", href: "#", active: true },
+      { icon: LayoutGrid, label: "Summary" },
+      { icon: Globe, label: "Web Analytics" },
+      { icon: Megaphone, label: "Ads & Campaigns" },
+      { icon: Share2, label: "Social Media", active: true },
     ],
   },
   {
-    label: "PLANNING",
+    label: "TRACKERS",
     items: [
-      { icon: Target, label: "Marketing Budgets", href: "#" },
-      { icon: Layers, label: "UTM Builder", href: "#" },
-      { icon: TrendingUp, label: "Funnel Builder", href: "#" },
+      { icon: DollarSign, label: "Marketing Budgets" },
+      { icon: Link2, label: "UTM Builder" },
+      { icon: Filter, label: "Funnel Builder" },
     ],
   },
   {
     label: "INTELLIGENCE",
-    items: [
-      { icon: LineChart, label: "Analytics", href: "#" },
-      { icon: Bot, label: "Marketing AI", href: "#" },
-    ],
+    items: [{ icon: Bot, label: "Marketing AI" }],
   },
   {
     label: "SETTINGS",
     items: [
-      { icon: Settings, label: "Form Builder", href: "#" },
-      { icon: BarChart3, label: "Integrations", href: "#" },
-      { icon: Settings, label: "Sync Configuration", href: "#" },
+      { icon: FileText, label: "Form Builder" },
+      { icon: Plug, label: "Integrations" },
+      { icon: RefreshCw, label: "Sync Configuration" },
     ],
   },
 ];
 
 export function Sidebar() {
-  const [collapsed, setCollapsed] = useState(false);
-
   return (
-    <aside
-      className={cn(
-        "flex flex-col h-screen bg-[#0f1117] border-r border-white/[0.06] transition-all duration-300 shrink-0",
-        collapsed ? "w-14" : "w-52"
-      )}
-    >
-      {/* Logo */}
-      <div className="flex items-center gap-2 px-3 py-4 border-b border-white/[0.06]">
-        <div className="w-7 h-7 rounded bg-indigo-500 flex items-center justify-center shrink-0">
+    <div className="flex h-screen shrink-0 bg-[#0a0a0b]">
+      {/* Icon rail */}
+      <div className="w-[62px] flex flex-col items-center py-3 border-r border-white/[0.05]">
+        <div className="w-8 h-8 rounded-lg bg-indigo-500 flex items-center justify-center mb-4">
           <BarChart3 className="w-4 h-4 text-white" />
         </div>
-        {!collapsed && (
-          <span className="text-white text-sm font-semibold tracking-tight truncate">
-            RareFitness
-          </span>
-        )}
-        <button
-          onClick={() => setCollapsed(!collapsed)}
-          className="ml-auto text-white/30 hover:text-white/60 transition-colors"
-        >
-          <ChevronRight
-            className={cn("w-3.5 h-3.5 transition-transform", collapsed && "rotate-180")}
-          />
+        <nav className="flex-1 flex flex-col gap-1 w-full px-1.5">
+          {RAIL.map((item) => (
+            <button
+              key={item.label}
+              className={cn(
+                "flex flex-col items-center gap-0.5 py-2 rounded-lg transition-colors",
+                item.active ? "bg-white/10 text-white" : "text-white/35 hover:text-white/70 hover:bg-white/5"
+              )}
+            >
+              <item.icon className="w-4 h-4" />
+              <span className="text-[8px] font-medium">{item.label}</span>
+            </button>
+          ))}
+        </nav>
+        <button className="text-white/30 hover:text-white/60 mt-2">
+          <PanelLeftClose className="w-4 h-4" />
         </button>
       </div>
 
-      {/* Nav */}
-      <nav className="flex-1 overflow-y-auto py-3 space-y-4 scrollbar-none">
-        {navSections.map((section) => (
-          <div key={section.label}>
-            {!collapsed && (
-              <p className="px-3 mb-1 text-[9px] font-semibold tracking-widest text-white/25 uppercase">
-                {section.label}
-              </p>
-            )}
-            <ul className="space-y-0.5">
-              {section.items.map((item) => (
-                <li key={item.label}>
-                  <a
-                    href={item.href}
-                    className={cn(
-                      "flex items-center gap-2.5 px-3 py-1.5 rounded mx-1 text-[12px] font-medium transition-colors",
-                      item.active
-                        ? "bg-white/10 text-white"
-                        : "text-white/40 hover:text-white/70 hover:bg-white/5"
-                    )}
-                  >
-                    <item.icon className="w-3.5 h-3.5 shrink-0" />
-                    {!collapsed && <span className="truncate">{item.label}</span>}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
-      </nav>
-
-      {/* Footer */}
-      <div className="px-3 py-3 border-t border-white/[0.06]">
-        <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-full bg-indigo-500/30 flex items-center justify-center text-indigo-300 text-xs font-bold shrink-0">
-            G
-          </div>
-          {!collapsed && (
-            <div className="truncate">
-              <p className="text-white text-[11px] font-medium truncate">Gourav</p>
-              <p className="text-white/30 text-[10px] truncate">BD Master</p>
+      {/* Nav panel */}
+      <aside className="w-[188px] flex flex-col py-4 border-r border-white/[0.05] overflow-y-auto scrollbar-none">
+        <nav className="flex-1 space-y-5">
+          {NAV.map((section) => (
+            <div key={section.label}>
+              <p className="px-4 mb-1.5 text-[9px] font-semibold tracking-[0.12em] text-white/25">{section.label}</p>
+              <ul className="space-y-0.5 px-2">
+                {section.items.map((item) => (
+                  <li key={item.label}>
+                    <a
+                      href="#"
+                      className={cn(
+                        "flex items-center gap-2.5 px-2 py-1.5 rounded-lg text-[12.5px] font-medium transition-colors",
+                        item.active ? "bg-white/10 text-white" : "text-white/45 hover:text-white/80 hover:bg-white/5"
+                      )}
+                    >
+                      <item.icon className="w-4 h-4 shrink-0" />
+                      <span className="truncate">{item.label}</span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
             </div>
-          )}
-        </div>
-      </div>
-    </aside>
+          ))}
+        </nav>
+      </aside>
+    </div>
   );
 }
