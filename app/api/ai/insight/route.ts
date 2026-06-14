@@ -24,9 +24,9 @@ Be direct and specific — use the actual numbers. No fluff, no markdown headers
     messages: [{ role: "user", content: prompt }],
   });
 
+  const encoder = new TextEncoder();
   const readableStream = new ReadableStream({
     async start(controller) {
-      const encoder = new TextEncoder();
       try {
         for await (const event of stream) {
           if (
@@ -38,8 +38,14 @@ Be direct and specific — use the actual numbers. No fluff, no markdown headers
           }
         }
         controller.enqueue(encoder.encode("data: [DONE]\n\n"));
-      } catch (err) {
-        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ error: "Stream failed" })}\n\n`));
+      } catch (err: unknown) {
+        const msg =
+          err instanceof Error && err.message.includes("credit balance")
+            ? "Insufficient Anthropic credits. Add credits at console.anthropic.com/settings/billing."
+            : err instanceof Error
+            ? err.message
+            : "Stream failed";
+        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ error: msg })}\n\n`));
       } finally {
         controller.close();
       }

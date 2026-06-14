@@ -50,6 +50,7 @@ export function DashboardSummary() {
             try {
               const parsed = JSON.parse(text);
               if (parsed.text) setSummary((prev) => prev + parsed.text);
+              if (parsed.error) setSummary(`⚠ ${parsed.error}`);
             } catch {}
           }
         }

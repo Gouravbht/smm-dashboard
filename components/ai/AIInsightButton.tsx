@@ -45,6 +45,7 @@ export function AIInsightButton({ section, data, className }: Props) {
             try {
               const parsed = JSON.parse(text);
               if (parsed.text) setInsight((prev) => prev + parsed.text);
+              if (parsed.error) setInsight(`⚠ ${parsed.error}`);
             } catch {}
           }
         }

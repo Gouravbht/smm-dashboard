@@ -50,9 +50,15 @@ Keep each paragraph to 2 sentences max. Plain text only, no markdown.`;
           }
         }
         controller.enqueue(encoder.encode("data: [DONE]\n\n"));
-      } catch {
+      } catch (err: unknown) {
+        const msg =
+          err instanceof Error && err.message.includes("credit balance")
+            ? "Insufficient Anthropic credits. Add credits at console.anthropic.com/settings/billing."
+            : err instanceof Error
+            ? err.message
+            : "Stream failed";
         controller.enqueue(
-          encoder.encode(`data: ${JSON.stringify({ error: "Stream failed" })}\n\n`)
+          encoder.encode(`data: ${JSON.stringify({ error: msg })}\n\n`)
         );
       } finally {
         controller.close();
