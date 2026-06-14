@@ -35,7 +35,7 @@ Platform Engagement Rates:
 
 Reach vs Followers ratio:
 - Instagram: 142,000 reach / 18,400 followers = 7.7x ← viral reach
-- YouTube: 68,000 reach / 142,000 subscribers = 0.48x ← low
+- YouTube: 68,000 reach / 8,200 subscribers = 8.3x ← strong reach on a small base
 - Facebook: 54,000 reach / 12,600 followers = 4.3x
 
 MoM growth:
