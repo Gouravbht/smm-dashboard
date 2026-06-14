@@ -23,7 +23,7 @@ export function VideoCompletion() {
 
   return (
     <Section label="Video Completion Rate">
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* LEFT: completion bars */}
         <Panel className="flex flex-col">
           <div className="flex items-start justify-between px-5 pt-5 pb-1">
