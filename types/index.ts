@@ -159,4 +159,5 @@ export interface DateRange {
 export interface FilterState {
   dateRange: DateRange;
   activePlatforms: Platform[];
+  showMoM: boolean;
 }

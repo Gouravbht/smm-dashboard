@@ -5,6 +5,7 @@ interface FilterActions {
   setDateRange: (range: DateRange) => void;
   togglePlatform: (platform: Platform) => void;
   setAllPlatforms: () => void;
+  toggleMoM: () => void;
   reset: () => void;
 }
 
@@ -19,6 +20,7 @@ const ALL_PLATFORMS: Platform[] = ["instagram", "youtube", "facebook"];
 const initialState: FilterState = {
   dateRange: DEFAULT_DATE_RANGE,
   activePlatforms: ALL_PLATFORMS,
+  showMoM: false,
 };
 
 export const useFilterStore = create<FilterState & FilterActions>()((set, get) => ({
@@ -29,7 +31,7 @@ export const useFilterStore = create<FilterState & FilterActions>()((set, get) =
   togglePlatform: (platform) => {
     const { activePlatforms } = get();
     const isActive = activePlatforms.includes(platform);
-    if (isActive && activePlatforms.length === 1) return; // always keep at least one
+    if (isActive && activePlatforms.length === 1) return;
     set({
       activePlatforms: isActive
         ? activePlatforms.filter((p) => p !== platform)
@@ -38,6 +40,6 @@ export const useFilterStore = create<FilterState & FilterActions>()((set, get) =
   },
 
   setAllPlatforms: () => set({ activePlatforms: ALL_PLATFORMS }),
-
+  toggleMoM: () => set((s) => ({ showMoM: !s.showMoM })),
   reset: () => set(initialState),
 }));
