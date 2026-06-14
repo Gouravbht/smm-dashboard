@@ -1,6 +1,6 @@
 # SMM Dashboard — Rare Fitness
 
-> **Loom Walkthrough**: [Add link here after recording]
+> **Loom Walkthrough**: https://www.loom.com/share/eb42d95d7caf4f0081cb2c9f4da491fb
 
 A production-ready Social Media Analytics Dashboard built for the HumanAI AI Frontend Engineer assignment.
 
