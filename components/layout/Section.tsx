@@ -6,14 +6,25 @@ export function Section({
   label,
   children,
   className,
+  action,
 }: {
   label: string;
   children: React.ReactNode;
   className?: string;
+  action?: React.ReactNode;
 }) {
   return (
-    <section className={cn("px-6 pt-6", className)}>
-      <p className="section-label">{label}</p>
+    <section className={cn("px-4 sm:px-6 pt-6", className)}>
+      {action ? (
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/70">
+            {label}
+          </p>
+          {action}
+        </div>
+      ) : (
+        <p className="section-label">{label}</p>
+      )}
       {children}
     </section>
   );
