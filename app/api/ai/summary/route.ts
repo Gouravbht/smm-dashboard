@@ -1,7 +1,7 @@
-import Anthropic from "@anthropic-ai/sdk";
+import Groq from "groq-sdk";
 import { NextRequest } from "next/server";
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 export async function POST(req: NextRequest) {
   const { kpi, platforms, filters } = await req.json();
@@ -20,7 +20,14 @@ KPIs:
 - Avg Engagement Rate: ${kpi.avgEngagementRate}% (${kpi.mom.avgEngagementRate > 0 ? "+" : ""}${kpi.mom.avgEngagementRate}% MoM)
 - Content Published: ${kpi.contentPublished} posts
 
-Platform breakdown: ${JSON.stringify(platforms.map((p: { platform: string; followers: number; reach: number; engagementRate: number }) => ({ platform: p.platform, followers: p.followers, reach: p.reach, engagementRate: p.engagementRate })))}
+Platform breakdown: ${JSON.stringify(
+    platforms.map((p: { platform: string; followers: number; reach: number; engagementRate: number }) => ({
+      platform: p.platform,
+      followers: p.followers,
+      reach: p.reach,
+      engagementRate: p.engagementRate,
+    }))
+  )}
 
 Respond in exactly 3 short paragraphs separated by newlines:
 1. What's working well (be specific with numbers)
@@ -29,34 +36,30 @@ Respond in exactly 3 short paragraphs separated by newlines:
 
 Keep each paragraph to 2 sentences max. Plain text only, no markdown.`;
 
-  const stream = client.messages.stream({
-    model: "claude-sonnet-4-6",
-    max_tokens: 300,
-    messages: [{ role: "user", content: prompt }],
-  });
+  const encoder = new TextEncoder();
 
   const readableStream = new ReadableStream({
     async start(controller) {
-      const encoder = new TextEncoder();
       try {
-        for await (const event of stream) {
-          if (
-            event.type === "content_block_delta" &&
-            event.delta.type === "text_delta"
-          ) {
+        const stream = await groq.chat.completions.create({
+          model: "llama-3.3-70b-versatile",
+          max_tokens: 300,
+          messages: [{ role: "user", content: prompt }],
+          stream: true,
+        });
+
+        for await (const chunk of stream) {
+          const text = chunk.choices[0]?.delta?.content ?? "";
+          if (text) {
             controller.enqueue(
-              encoder.encode(`data: ${JSON.stringify({ text: event.delta.text })}\n\n`)
+              encoder.encode(`data: ${JSON.stringify({ text })}\n\n`)
             );
           }
         }
         controller.enqueue(encoder.encode("data: [DONE]\n\n"));
       } catch (err: unknown) {
         const msg =
-          err instanceof Error && err.message.includes("credit balance")
-            ? "Insufficient Anthropic credits. Add credits at console.anthropic.com/settings/billing."
-            : err instanceof Error
-            ? err.message
-            : "Stream failed";
+          err instanceof Error ? err.message : "AI request failed";
         controller.enqueue(
           encoder.encode(`data: ${JSON.stringify({ error: msg })}\n\n`)
         );

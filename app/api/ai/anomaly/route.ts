@@ -1,8 +1,8 @@
-import Anthropic from "@anthropic-ai/sdk";
+import Groq from "groq-sdk";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 const AnomalyResponseSchema = z.array(
   z.object({
@@ -24,65 +24,54 @@ export async function POST(req: NextRequest) {
 Analyze this dashboard data and identify 2-4 genuine statistical anomalies or noteworthy outliers:
 
 Video Completion Rates:
-- Instagram Reels: 88%
-- YouTube Videos: 46%
-- Facebook Videos: 38%
-(Industry benchmark: IG ~60%, YT ~40%, FB ~35%)
+- Instagram Reels: 88% (industry avg ~60%) ← significantly above average
+- YouTube Videos: 46% (industry avg ~40%)
+- Facebook Videos: 38% (industry avg ~35%)
 
 Platform Engagement Rates:
-- Instagram: 4.2% (industry avg: 1-3%)
-- YouTube: 2.8% (industry avg: 2-5%)
-- Facebook: 1.6% (industry avg: 0.5-1%)
-
-Follower counts:
-- Instagram: 18,400
-- YouTube: 142,000 (subscribers)
-- Facebook: 12,600
+- Instagram: 4.2% (industry avg 1-3%) ← above average
+- YouTube: 2.8% (industry avg 2-5%)
+- Facebook: 1.6% (industry avg 0.5-1%)
 
 Reach vs Followers ratio:
-- Instagram: 142,000 reach / 18,400 followers = 7.7x
-- YouTube: 68,000 reach / 142,000 subscribers = 0.48x
+- Instagram: 142,000 reach / 18,400 followers = 7.7x ← viral reach
+- YouTube: 68,000 reach / 142,000 subscribers = 0.48x ← low
 - Facebook: 54,000 reach / 12,600 followers = 4.3x
 
 MoM growth:
-- Total followers: +12%
-- Follower growth itself: +52% (this is growth of growth)
-- Total reach: +16%
+- Follower growth rate itself: +52% MoM ← very high acceleration
+- Total reach: +16% MoM
 
-Content performance from data: ${JSON.stringify(data.contentPosts?.slice(0, 3))}
+Content from data: ${JSON.stringify((data.contentPosts ?? []).slice(0, 3))}
 
-Return ONLY a valid JSON array (no markdown, no explanation, just raw JSON) with this structure:
+Return ONLY a valid JSON array (no markdown, no code fences, no explanation — raw JSON only):
 [
   {
-    "id": "unique-string",
+    "id": "unique-id",
     "metric": "Short metric name",
-    "value": "actual value as string",
-    "expected": "expected range or benchmark as string",
-    "reason": "One sentence explaining why this is anomalous and what it means",
-    "severity": "high" | "medium" | "low",
-    "section": "which dashboard section this relates to"
+    "value": "actual value",
+    "expected": "expected range or benchmark",
+    "reason": "One sentence explaining why this is anomalous and what it means for the brand",
+    "severity": "high",
+    "section": "which dashboard section"
   }
-]
-
-Only flag genuinely interesting anomalies — not everything that differs from average.`;
+]`;
 
   try {
-    const message = await client.messages.create({
-      model: "claude-haiku-4-5",
+    const response = await groq.chat.completions.create({
+      model: "llama-3.3-70b-versatile",
       max_tokens: 600,
       messages: [{ role: "user", content: prompt }],
+      stream: false,
     });
 
-    const content = message.content[0];
-    if (content.type !== "text") {
-      return NextResponse.json({ anomalies: [] });
-    }
+    const raw = (response.choices[0]?.message?.content ?? "")
+      .replace(/```json\n?/g, "")
+      .replace(/```\n?/g, "")
+      .trim();
 
-    // Strip markdown code fences if present
-    const raw = content.text.replace(/```json?\n?/g, "").replace(/```/g, "").trim();
     const parsed = JSON.parse(raw);
     const validated = AnomalyResponseSchema.parse(parsed);
-
     return NextResponse.json({ anomalies: validated });
   } catch {
     return NextResponse.json({ anomalies: [] });
