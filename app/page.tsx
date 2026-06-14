@@ -11,6 +11,7 @@ import { ContentPerformance } from "@/components/sections/ContentPerformance";
 import { VideoCompletion } from "@/components/sections/VideoCompletion";
 import { AudienceByLocation } from "@/components/sections/AudienceByLocation";
 import { PostAttributionFunnel } from "@/components/sections/PostAttributionFunnel";
+import { BestTimeToPost } from "@/components/sections/BestTimeToPost";
 
 export default function DashboardPage() {
   return (
@@ -36,6 +37,7 @@ export default function DashboardPage() {
           <VideoCompletion />
           <AudienceByLocation />
           <PostAttributionFunnel />
+          <BestTimeToPost />
 
           {/* Bottom spacing */}
           <div className="h-8" />

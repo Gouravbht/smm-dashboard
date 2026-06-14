@@ -4,24 +4,35 @@ import { NextRequest } from "next/server";
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 export async function POST(req: NextRequest) {
-  const { kpi, platforms, filters } = await req.json();
+  let kpi: unknown, platforms: unknown, filters: unknown;
+  try {
+    ({ kpi, filters, platforms } = await req.json());
+  } catch {
+    return Response.json({ error: "Invalid request body" }, { status: 400 });
+  }
+  if (!kpi || !filters || !platforms) {
+    return Response.json({ error: "Missing required fields" }, { status: 400 });
+  }
+  const typedKpi = kpi as { totalFollowers: number; followerGrowth: number; totalReach: number; avgEngagementRate: number; contentPublished: number; mom: Record<string, number> };
+  const typedFilters = filters as { activePlatforms: string[]; dateRange: { label: string } };
+  const typedPlatforms = platforms as { platform: string; followers: number; reach: number; engagementRate: number }[];
 
-  const platformsText = filters.activePlatforms.join(", ");
-  const dateText = filters.dateRange.label;
+  const platformsText = typedFilters.activePlatforms.join(", ");
+  const dateText = typedFilters.dateRange.label;
 
   const prompt = `You are a social media strategist analyzing performance for "Rare Fitness" fitness brand.
 
 Period: ${dateText} | Platforms: ${platformsText}
 
 KPIs:
-- Total Followers: ${kpi.totalFollowers.toLocaleString()} (${kpi.mom.totalFollowers > 0 ? "+" : ""}${kpi.mom.totalFollowers}% MoM)
-- Follower Growth: +${kpi.followerGrowth} (${kpi.mom.followerGrowth > 0 ? "+" : ""}${kpi.mom.followerGrowth}% MoM)
-- Total Reach: ${kpi.totalReach.toLocaleString()} (${kpi.mom.totalReach > 0 ? "+" : ""}${kpi.mom.totalReach}% MoM)
-- Avg Engagement Rate: ${kpi.avgEngagementRate}% (${kpi.mom.avgEngagementRate > 0 ? "+" : ""}${kpi.mom.avgEngagementRate}% MoM)
-- Content Published: ${kpi.contentPublished} posts
+- Total Followers: ${typedKpi.totalFollowers.toLocaleString()} (${typedKpi.mom.totalFollowers > 0 ? "+" : ""}${typedKpi.mom.totalFollowers}% MoM)
+- Follower Growth: +${typedKpi.followerGrowth} (${typedKpi.mom.followerGrowth > 0 ? "+" : ""}${typedKpi.mom.followerGrowth}% MoM)
+- Total Reach: ${typedKpi.totalReach.toLocaleString()} (${typedKpi.mom.totalReach > 0 ? "+" : ""}${typedKpi.mom.totalReach}% MoM)
+- Avg Engagement Rate: ${typedKpi.avgEngagementRate}% (${typedKpi.mom.avgEngagementRate > 0 ? "+" : ""}${typedKpi.mom.avgEngagementRate}% MoM)
+- Content Published: ${typedKpi.contentPublished} posts
 
 Platforms: ${JSON.stringify(
-    platforms.map((p: { platform: string; followers: number; reach: number; engagementRate: number }) => ({
+    typedPlatforms.map((p) => ({
       platform: p.platform,
       followers: p.followers,
       reach: p.reach,

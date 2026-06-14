@@ -187,3 +187,25 @@ export const MOCK_DATA: DashboardData = {
     { stage: "Lead Captured",    count: 349,    rate: "61% form completion",        conversionFromPrev: 61 },
   ],
 };
+
+// Best time to post heatmap — engagement index 0-100 across 7 days × 8 hour buckets
+export const POSTING_HEATMAP = {
+  days: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+  hours: ["12am", "3am", "6am", "9am", "12pm", "3pm", "6pm", "9pm"],
+  // scores[dayIndex][hourIndex]
+  scores: [
+    [12,  8,  62, 76, 55, 48, 78, 65],  // Mon
+    [15, 10,  40, 72, 62, 55, 88, 70],  // Tue
+    [10,  8,  45, 68, 65, 60, 75, 58],  // Wed
+    [14,  9,  52, 80, 58, 52, 91, 74],  // Thu
+    [18, 12,  42, 70, 60, 58, 65, 50],  // Fri
+    [ 8,  6,  88, 90, 72, 68, 58, 42],  // Sat
+    [10,  8,  82, 85, 68, 62, 70, 55],  // Sun
+  ],
+  bestSlots: [
+    { day: "Thursday", hour: "6–9pm",  score: 91 },
+    { day: "Saturday", hour: "9am–12pm", score: 90 },
+    { day: "Saturday", hour: "6–9am",  score: 88 },
+  ],
+  insight: "Thursday evening posts see 2.3× more engagement than the weekly average — followers are most active after weekday workouts. Weekend mornings (Sat 6–9am) are the second-best window, driven by outdoor workout content.",
+};
